@@ -11,6 +11,7 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="stylesheet" href="static/css/styles.css">
 </head>
 <body>
   <a-scene vr-mode-ui="enabled: false" ar-mode-ui="enabled: true">
@@ -42,27 +43,26 @@
     <div id="loading-progress" style="font-size: 14px;">0%</div>
   </div>
 
-  <!-- Big Play Button Overlay -->
-  <div id="big-play-button" style="
+  <!-- Start Overlay - shown initially to begin playback -->
+  <div id="start-overlay" style="
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.9);
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     z-index: 2500;
-    display: none;
-    cursor: pointer;
+    color: white;
+    font-family: Arial, sans-serif;
+    text-align: center;
   ">
-    <div style="
-      font-size: 120px;
-      color: white;
-      text-shadow: 0 0 20px rgba(0,0,0,0.5);
-      transition: transform 0.2s ease;
-    " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">▶️</div>
+    <div style="font-size: 120px; margin-bottom: 20px;">▶️</div>
+    <div style="font-size: 24px; margin-bottom: 10px;">Нажмите чтобы начать</div>
+    <div style="font-size: 16px; color: #ccc;">360° видео воспроизведение</div>
   </div>
 
   <style>

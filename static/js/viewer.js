@@ -9,67 +9,35 @@ AFRAME.registerComponent('video-controls', {
     this.video = this.data.video;
     this.overlayVisible = true;
     this.isPlaying = false;
+    this.isFullscreen = false;
+    this.isTouchDevice = 'ontouchstart' in window;
+
+    // Store global reference for start overlay handler
+    videoControlsComponent = this;
 
     // Create overlay container
     this.overlay = document.createElement('div');
     this.overlay.id = 'video-controls-overlay';
-    this.overlay.style.cssText = `
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      background: rgba(0, 0, 0, 0.8);
-      color: white;
-      padding: 20px;
-      border-radius: 10px;
-      font-family: Arial, sans-serif;
-      z-index: 1000;
-      min-width: 300px;
-      transition: opacity 0.3s ease;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    `;
 
     // Controls container
     const controls = document.createElement('div');
-    controls.style.cssText = `
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    `;
 
     // Progress bar container
     const progressContainer = document.createElement('div');
-    progressContainer.style.cssText = `
-      width: 100%;
-      height: 8px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 4px;
-      cursor: pointer;
-      position: relative;
-    `;
+    progressContainer.className = 'progress-container';
 
     this.progressBar = document.createElement('div');
-    this.progressBar.style.cssText = `
-      height: 100%;
-      background: #007bff;
-      border-radius: 4px;
-      width: 0%;
-      transition: width 0.1s ease;
-    `;
+    this.progressBar.className = 'progress-bar';
 
     progressContainer.appendChild(this.progressBar);
     controls.appendChild(progressContainer);
 
-    // Control buttons
+    // Control buttons row
     const buttonsRow = document.createElement('div');
-    buttonsRow.style.cssText = `
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    `;
+    buttonsRow.className = 'control-buttons';
 
     // Play/Pause button
     this.playPauseBtn = this.createControlButton('▶️', () => this.togglePlayPause());
-    this.playPauseBtn.textContent = '▶️';
     buttonsRow.appendChild(this.playPauseBtn);
 
     // Restart button
@@ -78,56 +46,39 @@ AFRAME.registerComponent('video-controls', {
 
     // Volume control
     const volumeContainer = document.createElement('div');
-    volumeContainer.style.cssText = `display: flex; align-items: center; gap: 8px;`;
-
+    volumeContainer.className = 'volume-container';
     volumeContainer.innerHTML = `<span>🔊</span>`;
     this.volumeSlider = document.createElement('input');
+    this.volumeSlider.className = 'volume-slider';
     this.volumeSlider.type = 'range';
     this.volumeSlider.min = '0';
     this.volumeSlider.max = '1';
     this.volumeSlider.step = '0.1';
     this.volumeSlider.value = '1';
-    this.volumeSlider.style.cssText = `
-      width: 80px;
-      height: 4px;
-      background: rgba(255, 255, 255, 0.2);
-      outline: none;
-      border-radius: 2px;
-      cursor: pointer;
-    `;
     this.volumeSlider.addEventListener('input', (e) => this.setVolume(e.target.value));
     volumeContainer.appendChild(this.volumeSlider);
     buttonsRow.appendChild(volumeContainer);
 
     // Time display
     this.timeDisplay = document.createElement('span');
-    this.timeDisplay.style.cssText = `
-      font-size: 12px;
-      color: #ccc;
-      min-width: 60px;
-      text-align: right;
-    `;
+    this.timeDisplay.className = 'time-display';
     this.timeDisplay.textContent = '0:00 / 0:00';
     buttonsRow.appendChild(this.timeDisplay);
+
+    // Fullscreen button
+    this.fullscreenBtn = document.createElement('button');
+    this.fullscreenBtn.id = 'fullscreen-btn';
+    this.fullscreenBtn.title = 'Toggle Fullscreen';
+    this.fullscreenBtn.innerHTML = '⛶';
+    this.fullscreenBtn.addEventListener('click', () => this.toggleFullscreen());
+    buttonsRow.appendChild(this.fullscreenBtn);
 
     controls.appendChild(buttonsRow);
 
     // Toggle overlay button
     this.toggleBtn = document.createElement('button');
+    this.toggleBtn.className = 'toggle-controls-btn';
     this.toggleBtn.textContent = 'Hide Controls';
-    this.toggleBtn.style.cssText = `
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      color: white;
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 12px;
-      margin-top: 10px;
-      transition: background 0.3s ease;
-    `;
-    this.toggleBtn.addEventListener('mouseenter', () => this.toggleBtn.style.background = 'rgba(255, 255, 255, 0.2)');
-    this.toggleBtn.addEventListener('mouseleave', () => this.toggleBtn.style.background = 'rgba(255, 255, 255, 0.1)');
     this.toggleBtn.addEventListener('click', () => this.toggleOverlay());
 
     controls.appendChild(this.toggleBtn);
@@ -135,27 +86,15 @@ AFRAME.registerComponent('video-controls', {
 
     // Show controls toggle
     const showToggle = document.createElement('button');
+    showToggle.className = 'show-toggle';
     showToggle.textContent = '🎥';
-    showToggle.style.cssText = `
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 50px;
-      height: 50px;
-      background: rgba(0, 0, 0, 0.8);
-      border: none;
-      border-radius: 50%;
-      color: white;
-      font-size: 18px;
-      cursor: pointer;
-      z-index: 999;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    `;
     showToggle.title = 'Show Video Controls';
     showToggle.addEventListener('click', () => {
       this.showOverlay();
-      setTimeout(() => this.overlayVisible = false, 3000);
+      setTimeout(() => {
+        this.overlayVisible = false;
+        this.hideOverlay();
+      }, 3000);
     });
 
     document.body.appendChild(this.overlay);
@@ -163,22 +102,69 @@ AFRAME.registerComponent('video-controls', {
 
     this.showToggle = showToggle;
 
+    // Touch events for better mobile support
+    if (this.isTouchDevice) {
+      // Add touch events for overlay
+      this.overlay.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        this.clearHideTimeout();
+      }, { passive: false });
+
+      this.overlay.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        this.setHideTimeout();
+      }, { passive: false });
+
+      // Add touch events for show toggle
+      showToggle.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        this.showOverlay();
+        setTimeout(() => {
+          this.overlayVisible = false;
+          this.hideOverlay();
+        }, 3000);
+      }, { passive: false });
+
+      // Prevent context menu on long press
+      this.overlay.addEventListener('contextmenu', (e) => e.preventDefault());
+      showToggle.addEventListener('contextmenu', (e) => e.preventDefault());
+    }
+
     // Video event listeners
     this.video.addEventListener('loadedmetadata', () => this.onVideoLoaded());
     this.video.addEventListener('timeupdate', () => this.updateProgress());
     this.video.addEventListener('ended', () => this.onVideoEnded());
-    progressContainer.addEventListener('click', (e) => this.seek(e));
+    progressContainer.addEventListener(this.isTouchDevice ? 'touchend' : 'click', (e) => this.seek(e));
 
     // Auto-hide controls
     this.hideTimeout = null;
     this.overlay.addEventListener('mouseenter', () => this.clearHideTimeout());
     this.overlay.addEventListener('mouseleave', () => this.setHideTimeout());
-    document.addEventListener('mousemove', (e) => {
-      if (e.clientX < 350 && e.clientY < 150) {
-        this.showOverlay();
-        this.setHideTimeout();
-      }
-    });
+
+    // On mobile, show controls on touch
+    if (this.isTouchDevice) {
+      document.addEventListener('touchstart', (e) => {
+        const rect = this.overlay.getBoundingClientRect();
+        if (e.touches[0].clientX < rect.left || e.touches[0].clientY < rect.top ||
+            e.touches[0].clientX > rect.right || e.touches[0].clientY > rect.bottom) {
+          this.showOverlay();
+          this.setHideTimeout();
+        }
+      }, { passive: true });
+    } else {
+      document.addEventListener('mousemove', (e) => {
+        if (e.clientX < 350 && e.clientY < 150) {
+          this.showOverlay();
+          this.setHideTimeout();
+        }
+      });
+    }
+
+    // Fullscreen change listener
+    document.addEventListener('fullscreenchange', () => this.onFullscreenChange());
+    document.addEventListener('webkitfullscreenchange', () => this.onFullscreenChange());
+    document.addEventListener('mozfullscreenchange', () => this.onFullscreenChange());
+    document.addEventListener('MSFullscreenChange', () => this.onFullscreenChange());
 
     // Start with controls visible for a few seconds
     setTimeout(() => this.hideOverlay(), 3000);
@@ -186,31 +172,65 @@ AFRAME.registerComponent('video-controls', {
 
   createControlButton: function(text, callback) {
     const btn = document.createElement('button');
+    btn.className = 'control-button';
     btn.textContent = text;
-    btn.style.cssText = `
-      width: 40px;
-      height: 40px;
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      color: white;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.3s ease, transform 0.2s ease;
-    `;
-    btn.addEventListener('mouseenter', () => {
-      btn.style.background = 'rgba(255, 255, 255, 0.2)';
-      btn.style.transform = 'scale(1.05)';
-    });
-    btn.addEventListener('mouseleave', () => {
-      btn.style.background = 'rgba(255, 255, 255, 0.1)';
-      btn.style.transform = 'scale(1)';
-    });
+
+    // Add hover effects for non-touch devices
+    if (!this.isTouchDevice) {
+      btn.addEventListener('mouseenter', () => {
+        btn.style.background = 'rgba(255, 255, 255, 0.2)';
+        btn.style.transform = 'scale(1.05)';
+      });
+      btn.addEventListener('mouseleave', () => {
+        btn.style.background = 'rgba(255, 255, 255, 0.1)';
+        btn.style.transform = 'scale(1)';
+      });
+    } else {
+      // Add touch feedback for mobile
+      btn.addEventListener('touchstart', () => {
+        btn.style.background = 'rgba(255, 255, 255, 0.2)';
+        btn.style.transform = 'scale(0.95)';
+      }, { passive: true });
+      btn.addEventListener('touchend', () => {
+        btn.style.background = 'rgba(255, 255, 255, 0.1)';
+        btn.style.transform = 'scale(1)';
+      }, { passive: true });
+    }
+
     btn.addEventListener('click', callback);
     return btn;
+  },
+
+  toggleFullscreen: function() {
+    const doc = document;
+    const docEl = doc.documentElement;
+
+    const requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen ||
+                              docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+    const exitFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen ||
+                           doc.webkitExitFullscreen || doc.msExitFullscreen;
+
+    if (!doc.fullscreenElement && !doc.mozFullScreenElement &&
+        !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+      requestFullScreen.call(docEl);
+    } else {
+      exitFullScreen.call(doc);
+    }
+  },
+
+  onFullscreenChange: function() {
+    this.isFullscreen = !!(document.fullscreenElement || document.mozFullScreenElement ||
+                          document.webkitFullscreenElement || document.msFullscreenElement);
+
+    // Update fullscreen button icon
+    this.fullscreenBtn.innerHTML = this.isFullscreen ? '⛶' : '⛶';
+
+    // Adjust controls positioning for fullscreen
+    if (this.isFullscreen) {
+      // In fullscreen, controls might need repositioning
+    } else {
+      // Normal mode
+    }
   },
 
   togglePlayPause: function() {
@@ -238,8 +258,17 @@ AFRAME.registerComponent('video-controls', {
 
   seek: function(e) {
     const rect = e.target.parentElement.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const percent = clickX / rect.width;
+    let clickX;
+
+    if (this.isTouchDevice && e.changedTouches) {
+      clickX = e.changedTouches[0].clientX - rect.left;
+    } else if (e.clientX !== undefined) {
+      clickX = e.clientX - rect.left;
+    } else {
+      return; // No valid position
+    }
+
+    const percent = Math.max(0, Math.min(1, clickX / rect.width)); // Clamp between 0 and 1
     const time = percent * this.video.duration;
     this.video.currentTime = time;
   },
@@ -305,6 +334,9 @@ AFRAME.registerComponent('video-controls', {
 
 
 
+// Global reference to the component (needed for start overlay click handler)
+let videoControlsComponent = null;
+
 // Add component to scene automatically
 document.addEventListener('DOMContentLoaded', function() {
   const scene = document.querySelector('a-scene');
@@ -335,22 +367,33 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     video.addEventListener('canplay', () => {
-      // Show big play button when video is ready
-      bigPlayButton.style.display = 'flex';
+      // Video is ready - show start overlay if it exists
+      const startOverlay = document.getElementById('start-overlay');
+      if (startOverlay) {
+        startOverlay.style.display = 'flex';
+
+        // Add click handler to start overlay
+        const startHandler = () => {
+          startOverlay.style.display = 'none';
+          video.play().then(() => {
+            // Update UI state - video is playing
+            if (videoControlsComponent) {
+              videoControlsComponent.isPlaying = true;
+              videoControlsComponent.playPauseBtn.textContent = '⏸️';
+              videoControlsComponent.showOverlay();
+              videoControlsComponent.setHideTimeout();
+            }
+          }).catch(console.error);
+        };
+
+        startOverlay.addEventListener('click', startHandler);
+        startOverlay.addEventListener('touchstart', startHandler, { passive: true });
+      }
     });
 
     video.addEventListener('canplaythrough', () => {
       if (loadingTimer) clearInterval(loadingTimer);
       loadingOverlay.style.display = 'none';
-    });
-
-    // Big play button
-    const bigPlayButton = document.getElementById('big-play-button');
-    bigPlayButton.addEventListener('click', () => {
-      bigPlayButton.style.display = 'none';
-      video.play().then(() => {
-        scene.setAttribute('video-controls', `video: #video`);
-      }).catch(console.error);
     });
 
     video.addEventListener('error', () => {
