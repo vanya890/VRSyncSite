@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>VR 360 Video Viewer</title>
+  <link rel="preload" href="https://aframe.io/releases/1.4.0/aframe.min.js" as="script">
+  <link rel="preload" href="static/js/viewer.js" as="script">
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <script src="static/js/viewer.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+  <a-scene vr-mode-ui="enabled: false" ar-mode-ui="enabled: true">
+    <a-camera position="0 0 0"></a-camera>
+    <a-videosphere src="#video" radius="100"></a-videosphere>
+  </a-scene>
+
+  <video id="video" crossorigin="anonymous" src="assets/videos/sample.mp4"></video>
+
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: Arial, sans-serif;
+    z-index: 2000;
+    display: none;
+  ">
+    <div style="font-size: 48px; margin-bottom: 20px;">⏳</div>
+    <div style="font-size: 18px; margin-bottom: 10px;">Загрузка видео...</div>
+    <div id="loading-progress" style="font-size: 14px;">0%</div>
+  </div>
+
+  <!-- Big Play Button Overlay -->
+  <div id="big-play-button" style="
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2500;
+    display: none;
+    cursor: pointer;
+  ">
+    <div style="
+      font-size: 120px;
+      color: white;
+      text-shadow: 0 0 20px rgba(0,0,0,0.5);
+      transition: transform 0.2s ease;
+    " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">▶️</div>
+  </div>
+
+  <style>
+    body { margin: 0; overflow: hidden; }
+    a-scene { width: 100vw; height: 100vh; }
+  </style>
+</body>
+</html>

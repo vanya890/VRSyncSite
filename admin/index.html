@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Admin Panel - VR 360 Video Manager</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 15px 30px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    .header h1 {
+      margin: 0;
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .logout-btn {
+      padding: 8px 16px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.3s;
+    }
+    .logout-btn:hover { background: #c82333; }
+    .panel {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 15px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    .panel h3 {
+      margin-top: 0;
+      color: #4a5568;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 10px;
+    }
+    .upload-form {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+    .upload-form input[type="file"] {
+      flex: 1;
+      padding: 12px;
+      border: 2px dashed #cbd5e0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.3s;
+    }
+    .upload-form input[type="file"]:hover { border-color: #667eea; }
+    .upload-form button {
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: transform 0.2s;
+    }
+    .upload-form button:hover { transform: translateY(-2px); }
+    .result {
+      margin-top: 20px;
+      padding: 20px;
+      background: #f7fafc;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+    }
+    .video-list {
+      display: grid;
+      gap: 20px;
+    }
+    .video-item {
+      display: flex;
+      align-items: center;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s;
+    }
+    .video-item:hover { transform: translateY(-2px); }
+    .video-info {
+      flex: 1;
+    }
+    .video-info h4 {
+      margin: 0 0 8px 0;
+      color: #2d3748;
+    }
+    .video-url { color: #718096; font-size: 14px; margin: 5px 0; }
+    .video-size { color: #a0aec0; font-size: 12px; }
+    .video-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+    .btn-view { background: #4299e1; color: white; }
+    .btn-view:hover { background: #3182ce; }
+    .btn-delete { background: #e53e3e; color: white; }
+    .btn-delete:hover { background: #c53030; }
+    .btn-qr-view { background: #48bb78; color: white; }
+    .btn-qr-view:hover { background: #38a169; }
+    .btn-qr-download { background: #ed8936; color: white; }
+    .btn-qr-download:hover { background: #dd6b20; }
+    .loading { text-align: center; padding: 20px; color: #718096; }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+    .modal img { max-width: 100%; margin: 20px 0; border-radius: 8px; }
+    .modal-close {
+      background: #e2e8f0;
+      color: #4a5568;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .modal-close:hover { background: #cbd5e0; }
+    @media (max-width: 768px) {
+      .upload-form { flex-direction: column; }
+      .video-item { flex-direction: column; text-align: center; }
+      .video-actions { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎥 VR 360 Video Manager</h1>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="panel">
+      <h3>Upload New Video</h3>
+      <form id="uploadForm" enctype="multipart/form-data" class="upload-form">
+        <input type="file" id="video" name="video" accept="video/*" required>
+        <button type="submit">Upload & Generate QR</button>
+      </form>
+      <div id="result"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Uploaded Videos</h3>
+      <div id="videoList" class="video-list">
+        <div class="loading">Loading videos...</div>
+      </div>
+    </div>
+
+    <div id="qrModal" class="modal">
+      <div class="modal-content">
+        <h3>QR Code</h3>
+        <img id="qrImage" src="" alt="QR Code">
+        <br>
+        <button class="modal-close" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('uploadForm');
+    const result = document.getElementById('result');
+    const videoList = document.getElementById('videoList');
+
+    // Load videos on page load
+    loadVideos();
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const button = form.querySelector('button');
+      const originalText = button.textContent;
+      button.textContent = 'Uploading...';
+      button.disabled = true;
+
+      try {
+        const response = await fetch('/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Upload failed');
+        }
+        result.innerHTML = `
+          <div class="result">
+            <p><strong>Success!</strong> Video uploaded and QR code generated.</p>
+            <p>Video URL: <a href="${data.videoUrl}" target="_blank">${data.videoUrl}</a></p>
+            <p>QR Code:</p>
+            <img src="${data.qrCode}" alt="QR Code" style="max-width: 200px; border-radius: 8px;">
+            <p><a href="${data.qrCode}" download="qr-code.png" style="display: inline-block; margin-top: 10px; padding: 8px 16px; background: #4299e1; color: white; text-decoration: none; border-radius: 6px;">Download QR Code</a></p>
+          </div>
+        `;
+        form.reset();
+        loadVideos();
+      } catch (error) {
+        result.innerHTML = `<div class="result" style="border-left-color: #e53e3e;"><p><strong>Error:</strong> ${error.message}</p></div>`;
+      } finally {
+        button.textContent = originalText;
+        button.disabled = false;
+      }
+    });
+
+    async function loadVideos() {
+      try {
+        const response = await fetch('/admin/api/videos', {
+          credentials: 'same-origin' // Include cookies for session
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+        }
+        const videos = await response.json();
+        renderVideoList(videos);
+      } catch (error) {
+        console.error('Error loading videos:', error);
+        videoList.innerHTML = `<div class="loading" style="color: red;">Ошибка загрузки видео: ${error.message}</div>`;
+      }
+    }
+
+    function renderVideoList(videos) {
+      if (videos.length === 0) {
+        videoList.innerHTML = '<div class="loading">No videos uploaded yet</div>';
+        return;
+      }
+
+      videoList.innerHTML = videos.map(video => `
+        <div class="video-item">
+          <div class="video-info">
+            <h4>${video.filename}</h4>
+            <div class="video-url">${window.location.origin}/viewer.html?video=${video.filename}</div>
+            <div class="video-size">${formatBytes(video.size)}</div>
+          </div>
+          <div class="video-actions">
+            <button class="btn btn-view" onclick="viewVideo('${video.filename}')">View</button>
+            <button class="btn btn-qr-view" onclick="viewQR('${video.filename}')">View QR</button>
+            <button class="btn btn-qr-download" onclick="downloadQR('${video.filename}')">Download QR</button>
+            <button class="btn btn-delete" onclick="deleteVideo('${video.filename}')">Delete</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function viewVideo(filename) {
+      window.open(`/viewer.html?video=${filename}`, '_blank');
+    }
+
+    async function deleteVideo(filename) {
+      if (!confirm(`Are you sure you want to delete "${filename}"?`)) return;
+
+      try {
+        const response = await fetch(`/admin/api/videos/${filename}`, { method: 'DELETE' });
+        if (response.ok) {
+          loadVideos();
+          alert('Video deleted successfully');
+        } else {
+          alert('Error deleting video');
+        }
+      } catch (error) {
+        alert('Error deleting video');
+      }
+    }
+
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function logout() {
+      window.location.href = '/admin/logout';
+    }
+
+    async function viewQR(filename) {
+      try {
+        const response = await fetch(`/admin/api/qr/${filename}`);
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to load QR code');
+        }
+        document.getElementById('qrImage').src = data.qrCode;
+        document.getElementById('qrModal').style.display = 'flex';
+      } catch (error) {
+        alert('Error loading QR code: ' + error.message);
+      }
+    }
+
+    async function downloadQR(filename) {
+      try {
+        const response = await fetch(`/admin/api/qr/${filename}`);
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to generate QR code');
+        }
+        const link = document.createElement('a');
+        link.href = data.qrCode;
+        link.download = `qr-${filename}.png`;
+        link.click();
+      } catch (error) {
+        alert('Error downloading QR code: ' + error.message);
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('qrModal').style.display = 'none';
+    }
+  </script>
+</body>
+</html>

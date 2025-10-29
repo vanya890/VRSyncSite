@@ -1,0 +1,26 @@
+body {
+  margin: 0;
+  overflow: hidden;
+  font-family: 'Arial', sans-serif;
+}
+
+a-scene {
+  width: 100vw;
+  height: 100vh;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+}
+
+/* Region theming example - Udmurtia style */
+.region-header {
+  background: linear-gradient(135deg, #FF7F00, #FFFFFF);
+  color: #333;
+  text-align: center;
+  padding: 10px;
+  font-size: 1.5em;
+}
