@@ -127,6 +127,7 @@ a-scene {
   cursor: pointer;
   z-index: 999;
   opacity: 0;
+  pointer-events: none;
   transition: opacity 0.3s ease, transform 0.2s ease;
 }
 
