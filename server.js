@@ -5,6 +5,8 @@ const qr = require('qrcode');
 const fs = require('fs');
 const session = require('express-session');
 const compression = require('compression');
+const http = require('http');
+const https = require('https');
 
 const app = express();
 const port = 3001;
@@ -29,6 +31,11 @@ if (isDevelopment) {
     res.header('Expires', '0');
     next();
   });
+}
+
+// Disable WebVR polyfill logging in production
+if (!isDevelopment) {
+  console.warn = console.error = () => {};
 }
 
 
@@ -201,6 +208,29 @@ app.get('/admin/api/qr/:filename', requireApiAuth, (req, res) => {
     const base64 = buffer.toString('base64');
     const qrCodeData = `data:image/png;base64,${base64}`;
     res.json({ qrCode: qrCodeData });
+  });
+});
+
+// Proxy for DPDB to bypass CORS issues with WebVR polyfill
+app.get('/dpdb.json', (req, res) => {
+  const url = 'https://dpdb.webvr.rocks/dpdb.json';
+  const protocol = url.startsWith('https') ? https : http;
+
+  protocol.get(url, (response) => {
+    let data = '';
+
+    response.on('data', (chunk) => {
+      data += chunk;
+    });
+
+    response.on('end', () => {
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.send(data);
+    });
+  }).on('error', (err) => {
+    console.error('DPDB proxy error:', err);
+    res.status(500).json({ error: 'Failed to fetch DPDB data' });
   });
 });
 

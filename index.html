@@ -6,6 +6,11 @@
   <link rel="preload" href="static/js/aframe.min.js" as="script">
   <link rel="preload" href="static/js/viewer.js" as="script">
   <script src="static/js/aframe.min.js"></script>
+  <!-- Override WebVR polyfill DPDB URL to use local proxy -->
+  <script>
+    window.WebVRConfig = window.WebVRConfig || {};
+    window.WebVRConfig.DPDB_PATH = '/dpdb.json';
+  </script>
   <script src="static/js/viewer.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="mobile-web-app-capable" content="yes">
@@ -19,7 +24,7 @@
 <body>
   <a-scene vr-mode-ui="enabled: false" ar-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
     <a-camera position="0 0 0" look-controls="enabled: false" wasd-controls-enabled="false" device-orientation-permission-ui="enabled: false" mobile-touch-look></a-camera>
-    <a-videosphere src="#video" radius="100"></a-videosphere>
+    <a-videosphere radius="100"></a-videosphere>
   </a-scene>
 
   <video id="video" crossorigin="anonymous" src="assets/videos/sample.mp4"></video>

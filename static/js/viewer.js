@@ -322,6 +322,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const loadingOverlay = document.getElementById('loading-overlay');
     const loadingProgress = document.getElementById('loading-progress');
 
+    // Hide loading initially
+    loadingOverlay.style.display = 'none';
+
     // Loading progress indicator
     let loadingTimer = null;
     video.addEventListener('loadstart', () => {
@@ -338,6 +341,14 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
       }, 200);
+    });
+
+    // Ensure videosphere waits for video to load
+    video.addEventListener('loadeddata', () => {
+      const videosphere = document.querySelector('a-videosphere');
+      if (videosphere) {
+        videosphere.setAttribute('src', '#video');
+      }
     });
 
     video.addEventListener('canplay', () => {
@@ -372,5 +383,8 @@ document.addEventListener('DOMContentLoaded', function() {
       loadingOverlay.style.display = 'none';
       loadingProgress.textContent = 'Ошибка загрузки';
     });
+
+    // Force video load to start immediately
+    video.load();
   }
 });
