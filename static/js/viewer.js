@@ -70,7 +70,7 @@ AFRAME.registerComponent('video-controls', {
     this.fullscreenBtn.id = 'fullscreen-btn';
     this.fullscreenBtn.title = 'Toggle Fullscreen';
     this.fullscreenBtn.innerHTML = '⛶';
-    this.fullscreenBtn.addEventListener('click', () => this.toggleFullscreen());
+    this.fullscreenBtn.addEventListener(this.isTouchDevice ? 'touchstart' : 'click', () => this.toggleFullscreen());
     buttonsRow.appendChild(this.fullscreenBtn);
 
     controls.appendChild(buttonsRow);
@@ -79,7 +79,7 @@ AFRAME.registerComponent('video-controls', {
     this.toggleBtn = document.createElement('button');
     this.toggleBtn.className = 'toggle-controls-btn';
     this.toggleBtn.textContent = 'Hide Controls';
-    this.toggleBtn.addEventListener('click', () => this.toggleOverlay());
+    this.toggleBtn.addEventListener(this.isTouchDevice ? 'touchstart' : 'click', () => this.toggleOverlay());
 
     controls.appendChild(this.toggleBtn);
     this.overlay.appendChild(controls);
@@ -134,7 +134,7 @@ AFRAME.registerComponent('video-controls', {
     this.video.addEventListener('loadedmetadata', () => this.onVideoLoaded());
     this.video.addEventListener('timeupdate', () => this.updateProgress());
     this.video.addEventListener('ended', () => this.onVideoEnded());
-    progressContainer.addEventListener(this.isTouchDevice ? 'touchend' : 'click', (e) => this.seek(e));
+    progressContainer.addEventListener(this.isTouchDevice ? 'touchstart' : 'click', (e) => this.seek(e));
 
     // Auto-hide controls
     this.hideTimeout = null;
@@ -197,7 +197,7 @@ AFRAME.registerComponent('video-controls', {
       }, { passive: true });
     }
 
-    btn.addEventListener('click', callback);
+    btn.addEventListener(this.isTouchDevice ? 'touchstart' : 'click', callback);
     return btn;
   },
 
@@ -332,15 +332,100 @@ AFRAME.registerComponent('video-controls', {
   }
 });
 
+// Custom touch/mouse look controls component
+AFRAME.registerComponent('mobile-touch-look', {
+  init: function() {
+    this.isTouchDevice = 'ontouchstart' in window;
 
+    this.camera = this.el;
+    this.start = { x: 0, y: 0 };
+    this.isDragging = false;
+    this.sensitivity = 0.005; // Adjust for comfortable feel
+
+    this.onStart = this.onStart.bind(this);
+    this.onMove = this.onMove.bind(this);
+    this.onEnd = this.onEnd.bind(this);
+
+    const sceneEl = this.el.sceneEl;
+
+    if (this.isTouchDevice) {
+      // Mobile: touch events
+      sceneEl.addEventListener('touchstart', this.onStart, { passive: false });
+      sceneEl.addEventListener('touchmove', this.onMove, { passive: false });
+      sceneEl.addEventListener('touchend', this.onEnd);
+    } else {
+      // Desktop: mouse events
+      sceneEl.addEventListener('mousedown', this.onStart);
+      sceneEl.addEventListener('mousemove', this.onMove);
+      sceneEl.addEventListener('mouseup', this.onEnd);
+      sceneEl.addEventListener('mouseleave', this.onEnd);
+    }
+  },
+
+  onStart: function(e) {
+    e.preventDefault();
+    let clientX, clientY;
+    if (this.isTouchDevice) {
+      if (e.touches.length !== 1) return;
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    this.isDragging = true;
+    this.start.x = clientX;
+    this.start.y = clientY;
+    this.initialRotation = {
+      y: this.camera.object3D.rotation.y,
+      x: this.camera.object3D.rotation.x
+    };
+  },
+
+  onMove: function(e) {
+    if (!this.isDragging) return;
+    e.preventDefault();
+    let clientX, clientY;
+    if (this.isTouchDevice) {
+      if (e.touches.length !== 1) return;
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    var deltaX = clientX - this.start.x;
+    var deltaY = clientY - this.start.y;
+
+    // Horizontal rotation (azimuth - left/right)
+    this.camera.object3D.rotation.y = this.initialRotation.y - deltaX * this.sensitivity;
+
+    // Vertical rotation (polar - up/down)
+    var newPolar = this.initialRotation.x - deltaY * this.sensitivity;
+    // Allow full vertical rotation
+    this.camera.object3D.rotation.x = newPolar;
+
+    // Keep no roll
+    this.camera.object3D.rotation.z = 0;
+  },
+
+  onEnd: function(e) {
+    this.isDragging = false;
+  }
+});
 
 // Global reference to the component (needed for start overlay click handler)
 let videoControlsComponent = null;
+let userClickedStart = false;
+let canPlayThroughHappened = false;
 
 // Add component to scene automatically
 document.addEventListener('DOMContentLoaded', function() {
   const scene = document.querySelector('a-scene');
+  const camera = document.querySelector('a-camera');
   const video = document.querySelector('#video');
+
+  // Camera already configured in HTML for full rotation on mobile
 
   if (scene && video) {
     scene.setAttribute('video-controls', `video: #video`);
@@ -367,23 +452,32 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     video.addEventListener('canplay', () => {
-      // Video is ready - show start overlay if it exists
+      // Video can start playing - show start overlay only once at the very beginning
       const startOverlay = document.getElementById('start-overlay');
-      if (startOverlay) {
+      if (startOverlay && startOverlay.hasBeenShown !== true) {
         startOverlay.style.display = 'flex';
 
         // Add click handler to start overlay
         const startHandler = () => {
           startOverlay.style.display = 'none';
-          video.play().then(() => {
-            // Update UI state - video is playing
-            if (videoControlsComponent) {
-              videoControlsComponent.isPlaying = true;
-              videoControlsComponent.playPauseBtn.textContent = '⏸️';
-              videoControlsComponent.showOverlay();
-              videoControlsComponent.setHideTimeout();
-            }
-          }).catch(console.error);
+          startOverlay.hasBeenShown = true;
+
+          if (canPlayThroughHappened) {
+            // Ready to play immediately
+            video.play().then(() => {
+              // Update UI state - video is playing
+              if (videoControlsComponent) {
+                videoControlsComponent.isPlaying = true;
+                videoControlsComponent.playPauseBtn.textContent = '⏸️';
+                videoControlsComponent.showOverlay();
+                videoControlsComponent.setHideTimeout();
+              }
+            }).catch(console.error);
+          } else {
+            // Not fully ready, show loading and wait for canplaythrough
+            loadingOverlay.style.display = 'flex';
+            userClickedStart = true;
+          }
         };
 
         startOverlay.addEventListener('click', startHandler);
@@ -392,8 +486,26 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     video.addEventListener('canplaythrough', () => {
+      canPlayThroughHappened = true;
       if (loadingTimer) clearInterval(loadingTimer);
-      loadingOverlay.style.display = 'none';
+
+      if (userClickedStart) {
+        // User clicked start before canplaythrough, now auto-play
+        loadingOverlay.style.display = 'none';
+        video.play().then(() => {
+          // Update UI state - video is playing
+          if (videoControlsComponent) {
+            videoControlsComponent.isPlaying = true;
+            videoControlsComponent.playPauseBtn.textContent = '⏸️';
+            videoControlsComponent.showOverlay();
+            videoControlsComponent.setHideTimeout();
+          }
+        }).catch(console.error);
+        userClickedStart = false;
+      } else {
+        // No early click, just hide loading
+        loadingOverlay.style.display = 'none';
+      }
     });
 
     video.addEventListener('error', () => {

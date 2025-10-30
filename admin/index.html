@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Panel - VR 360 Video Manager</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -166,10 +167,72 @@
       margin-top: 10px;
     }
     .modal-close:hover { background: #cbd5e0; }
+    @media (max-width: 1024px) {
+      .container { padding: 15px; }
+    }
+
     @media (max-width: 768px) {
-      .upload-form { flex-direction: column; }
-      .video-item { flex-direction: column; text-align: center; }
-      .video-actions { justify-content: center; }
+      .header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+        padding: 20px;
+      }
+      .header h1 { font-size: 1.5rem; }
+      .logout-btn {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+      }
+      .panel {
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+      .upload-form {
+        flex-direction: column;
+        gap: 10px;
+      }
+      .upload-form button {
+        width: 100%;
+        padding: 15px;
+      }
+      .video-list { gap: 15px; }
+      .video-item {
+        flex-direction: column;
+        text-align: center;
+        padding: 15px;
+      }
+      .video-actions {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+      }
+      .btn {
+        flex: 1 1 calc(50% - 8px);
+        min-width: 120px;
+        padding: 10px;
+        font-size: 14px;
+      }
+      .modal-content {
+        padding: 15px;
+        max-width: 90vw;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container { padding: 10px; }
+      .header { padding: 15px; }
+      .panel { padding: 15px; }
+      .upload-form button { padding: 12px; font-size: 16px; }
+      .video-item { padding: 12px; }
+      .video-actions { gap: 6px; }
+      .btn {
+        width: 100%;
+        margin-bottom: 8px;
+        font-size: 16px;
+      }
+      .result img { max-width: 100%; }
+      .modal-content { padding: 10px; }
     }
   </style>
 </head>

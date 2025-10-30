@@ -9,6 +9,9 @@ const compression = require('compression');
 const app = express();
 const port = 3000;
 
+// Development mode для отключения кэша
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
 app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -17,6 +20,16 @@ app.use(session({
   resave: false,
   saveUninitialized: true
 }));
+
+// Отключение кэша в разработке
+if (isDevelopment) {
+  app.use((req, res, next) => {
+    res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.header('Pragma', 'no-cache');
+    res.header('Expires', '0');
+    next();
+  });
+}
 
 
 
@@ -69,12 +82,18 @@ app.get('/admin/login', (req, res) => {
     <html>
       <head>
         <title>Admin Login</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-          body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-          form { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 300px; text-align: center; }
-          input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }
-          button { width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
-          button:hover { background: #0056b3; }
+          * { box-sizing: border-box; }
+          body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+          form { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
+          input { width: 100%; padding: 12px; margin: 15px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
+          button { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; transition: background 0.3s; }
+          button:hover, button:focus { background: #0056b3; outline: none; }
+          @media (max-width: 480px) {
+            form { padding: 20px; }
+            input, button { font-size: 16px; } /* Prevent zoom on iOS */
+          }
         </style>
       </head>
       <body>
