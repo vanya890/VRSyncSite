@@ -457,27 +457,11 @@ document.addEventListener('DOMContentLoaded', function() {
       if (startOverlay && startOverlay.hasBeenShown !== true) {
         startOverlay.style.display = 'flex';
 
-        // Add click handler to start overlay
+        // Add click handler to start overlay (dummy button - just hide overlay)
         const startHandler = () => {
           startOverlay.style.display = 'none';
           startOverlay.hasBeenShown = true;
-
-          if (canPlayThroughHappened) {
-            // Ready to play immediately
-            video.play().then(() => {
-              // Update UI state - video is playing
-              if (videoControlsComponent) {
-                videoControlsComponent.isPlaying = true;
-                videoControlsComponent.playPauseBtn.textContent = '⏸️';
-                videoControlsComponent.showOverlay();
-                videoControlsComponent.setHideTimeout();
-              }
-            }).catch(console.error);
-          } else {
-            // Not fully ready, show loading and wait for canplaythrough
-            loadingOverlay.style.display = 'flex';
-            userClickedStart = true;
-          }
+          // Button is now a dummy - no autoplay functionality
         };
 
         startOverlay.addEventListener('click', startHandler);
@@ -489,23 +473,9 @@ document.addEventListener('DOMContentLoaded', function() {
       canPlayThroughHappened = true;
       if (loadingTimer) clearInterval(loadingTimer);
 
-      if (userClickedStart) {
-        // User clicked start before canplaythrough, now auto-play
-        loadingOverlay.style.display = 'none';
-        video.play().then(() => {
-          // Update UI state - video is playing
-          if (videoControlsComponent) {
-            videoControlsComponent.isPlaying = true;
-            videoControlsComponent.playPauseBtn.textContent = '⏸️';
-            videoControlsComponent.showOverlay();
-            videoControlsComponent.setHideTimeout();
-          }
-        }).catch(console.error);
-        userClickedStart = false;
-      } else {
-        // No early click, just hide loading
-        loadingOverlay.style.display = 'none';
-      }
+      // Button is now a dummy - no autoplay functionality
+      // Just hide loading overlay
+      loadingOverlay.style.display = 'none';
     });
 
     video.addEventListener('error', () => {
