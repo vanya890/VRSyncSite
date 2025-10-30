@@ -5,12 +5,14 @@
   <title>VR 360 Video Viewer</title>
   <link rel="preload" href="static/js/aframe.min.js" as="script">
   <link rel="preload" href="static/js/viewer.js" as="script">
-  <script src="static/js/aframe.min.js"></script>
-  <!-- Override WebVR polyfill DPDB URL to use local proxy -->
+  <!-- Override WebVR polyfill configuration - MUST be before A-Frame loads -->
   <script>
     window.WebVRConfig = window.WebVRConfig || {};
     window.WebVRConfig.DPDB_PATH = '/dpdb.json';
+    // NO_DPDB_FETCH disabled to allow dpdb.json usage
+    window.WebVRConfig.TOUCH_PANNER_DISABLED = true;
   </script>
+  <script src="static/js/aframe.min.js"></script>
   <script src="static/js/viewer.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="mobile-web-app-capable" content="yes">
@@ -19,6 +21,7 @@
   <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="pragma" content="no-cache" />
   <meta http-equiv="expires" content="0" />
+  <link rel="preload" href="assets/videos/sample.mp4" as="video" type="video/mp4">
   <link rel="stylesheet" href="static/css/styles.css">
 </head>
 <body>
@@ -27,7 +30,7 @@
     <a-videosphere radius="100"></a-videosphere>
   </a-scene>
 
-  <video id="video" crossorigin="anonymous" src="assets/videos/sample.mp4"></video>
+  <video id="video" src="assets/videos/sample.mp4" preload="none"></video>
 
   <!-- Loading Overlay -->
   <div id="loading-overlay" style="
@@ -48,7 +51,29 @@
   ">
     <div style="font-size: 48px; margin-bottom: 20px;">⏳</div>
     <div style="font-size: 18px; margin-bottom: 10px;">Загрузка видео...</div>
-    <div id="loading-progress" style="font-size: 14px;">0%</div>
+  <div id="loading-progress" style="font-size: 14px;">0%</div>
+  </div>
+
+  <!-- Buffering Overlay - shown during playback buffering -->
+  <div id="buffering-overlay" style="
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    border-radius: 10px;
+    z-index: 2100;
+    display: none;
+  ">
+    <div style="font-size: 24px; margin-bottom: 10px;">⏳</div>
+    <div style="font-size: 14px;">Буферизация...</div>
   </div>
 
   <!-- Start Overlay - shown initially to begin playback -->

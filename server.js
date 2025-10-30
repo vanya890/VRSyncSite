@@ -78,6 +78,39 @@ app.use('/static', express.static('static', {
 app.use('/assets', express.static('assets', {
   maxAge: '1h'  // Видео могут обновляться чаще
 }));
+
+// Дополнительная поддержка Range Requests для видео
+app.get('/assets/videos/:filename', (req, res) => {
+  const videoPath = path.join(__dirname, 'assets/videos', req.params.filename);
+  const stat = fs.statSync(videoPath);
+  const fileSize = stat.size;
+  const range = req.headers.range;
+
+  if (range) {
+    const parts = range.replace(/bytes=/, "").split("-");
+    const start = parseInt(parts[0], 10);
+    const end = parts[1] ? parseInt(parts[1], 10) : fileSize-1;
+
+    const chunksize = (end-start)+1;
+    const file = fs.createReadStream(videoPath, {start, end});
+
+    res.writeHead(206, {
+      'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+      'Accept-Ranges': 'bytes',
+      'Content-Length': chunksize,
+      'Content-Type': 'video/mp4',
+      'Cache-Control': 'public, max-age=3600' // 1 hour cache
+    });
+    file.pipe(res);
+  } else {
+    res.writeHead(200, {
+      'Content-Length': fileSize,
+      'Content-Type': 'video/mp4',
+      'Cache-Control': 'public, max-age=3600'
+    });
+    fs.createReadStream(videoPath).pipe(res);
+  }
+});
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
 // Логин
@@ -211,26 +244,27 @@ app.get('/admin/api/qr/:filename', requireApiAuth, (req, res) => {
   });
 });
 
-// Proxy for DPDB to bypass CORS issues with WebVR polyfill
+// Local DPDB response for WebVR polyfill (replaces external proxy)
 app.get('/dpdb.json', (req, res) => {
-  const url = 'https://dpdb.webvr.rocks/dpdb.json';
-  const protocol = url.startsWith('https') ? https : http;
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  // Return proper DPDB format with no devices - WebVR polyfill will use built-in fallbacks
+  res.json({
+    "version": 1,
+    "devices": []
+  });
+});
 
-  protocol.get(url, (response) => {
-    let data = '';
+// Removed invalid route - XMLHttpRequest patch handles blocking
 
-    response.on('data', (chunk) => {
-      data += chunk;
-    });
-
-    response.on('end', () => {
-      res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.send(data);
-    });
-  }).on('error', (err) => {
-    console.error('DPDB proxy error:', err);
-    res.status(500).json({ error: 'Failed to fetch DPDB data' });
+// Handle blocked DPDB requests
+app.get('/blocked-dpdb-request', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  // Return proper DPDB format - WebVR polyfill will use built-in fallbacks
+  res.json({
+    "version": 1,
+    "devices": []
   });
 });
 
