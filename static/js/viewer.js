@@ -7,7 +7,6 @@ AFRAME.registerComponent('video-controls', {
 
   init: function() {
     this.video = this.data.video;
-    this.overlayVisible = true;
     this.isPlaying = false;
     this.isFullscreen = false;
     this.isTouchDevice = 'ontouchstart' in window;
@@ -74,61 +73,11 @@ AFRAME.registerComponent('video-controls', {
     buttonsRow.appendChild(this.fullscreenBtn);
 
     controls.appendChild(buttonsRow);
-
-    // Toggle overlay button
-    this.toggleBtn = document.createElement('button');
-    this.toggleBtn.className = 'toggle-controls-btn';
-    this.toggleBtn.textContent = 'Hide Controls';
-    this.toggleBtn.addEventListener(this.isTouchDevice ? 'touchstart' : 'click', () => this.toggleOverlay());
-
-    controls.appendChild(this.toggleBtn);
     this.overlay.appendChild(controls);
 
-    // Show controls toggle
-    const showToggle = document.createElement('button');
-    showToggle.className = 'show-toggle';
-    showToggle.textContent = '🎥';
-    showToggle.title = 'Show Video Controls';
-    showToggle.addEventListener('click', () => {
-      this.showOverlay();
-      setTimeout(() => {
-        this.overlayVisible = false;
-        this.hideOverlay();
-      }, 3000);
-    });
+    // Controls always visible, no toggle or show-toggle needed
 
     document.body.appendChild(this.overlay);
-    document.body.appendChild(showToggle);
-
-    this.showToggle = showToggle;
-
-    // Touch events for better mobile support
-    if (this.isTouchDevice) {
-      // Add touch events for overlay
-      this.overlay.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        this.clearHideTimeout();
-      }, { passive: false });
-
-      this.overlay.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        this.setHideTimeout();
-      }, { passive: false });
-
-      // Add touch events for show toggle
-      showToggle.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        this.showOverlay();
-        setTimeout(() => {
-          this.overlayVisible = false;
-          this.hideOverlay();
-        }, 3000);
-      }, { passive: false });
-
-      // Prevent context menu on long press
-      this.overlay.addEventListener('contextmenu', (e) => e.preventDefault());
-      showToggle.addEventListener('contextmenu', (e) => e.preventDefault());
-    }
 
     // Video event listeners
     this.video.addEventListener('loadedmetadata', () => this.onVideoLoaded());
@@ -136,38 +85,11 @@ AFRAME.registerComponent('video-controls', {
     this.video.addEventListener('ended', () => this.onVideoEnded());
     progressContainer.addEventListener(this.isTouchDevice ? 'touchstart' : 'click', (e) => this.seek(e));
 
-    // Auto-hide controls
-    this.hideTimeout = null;
-    this.overlay.addEventListener('mouseenter', () => this.clearHideTimeout());
-    this.overlay.addEventListener('mouseleave', () => this.setHideTimeout());
-
-    // On mobile, show controls on touch
-    if (this.isTouchDevice) {
-      document.addEventListener('touchstart', (e) => {
-        const rect = this.overlay.getBoundingClientRect();
-        if (e.touches[0].clientX < rect.left || e.touches[0].clientY < rect.top ||
-            e.touches[0].clientX > rect.right || e.touches[0].clientY > rect.bottom) {
-          this.showOverlay();
-          this.setHideTimeout();
-        }
-      }, { passive: true });
-    } else {
-      document.addEventListener('mousemove', (e) => {
-        if (e.clientX < 350 && e.clientY < 150) {
-          this.showOverlay();
-          this.setHideTimeout();
-        }
-      });
-    }
-
     // Fullscreen change listener
     document.addEventListener('fullscreenchange', () => this.onFullscreenChange());
     document.addEventListener('webkitfullscreenchange', () => this.onFullscreenChange());
     document.addEventListener('mozfullscreenchange', () => this.onFullscreenChange());
     document.addEventListener('MSFullscreenChange', () => this.onFullscreenChange());
-
-    // Start with controls visible for a few seconds
-    setTimeout(() => this.hideOverlay(), 3000);
   },
 
   createControlButton: function(text, callback) {
@@ -296,39 +218,6 @@ AFRAME.registerComponent('video-controls', {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return mins + ':' + (secs < 10 ? '0' : '') + secs;
-  },
-
-  toggleOverlay: function() {
-    if (this.overlayVisible) {
-      this.hideOverlay();
-    } else {
-      this.showOverlay();
-      this.setHideTimeout();
-    }
-  },
-
-  showOverlay: function() {
-    this.overlay.style.opacity = '1';
-    this.overlayVisible = true;
-    this.showToggle.style.opacity = '0';
-  },
-
-  hideOverlay: function() {
-    this.overlay.style.opacity = '0';
-    this.overlayVisible = false;
-    this.showToggle.style.opacity = '1';
-  },
-
-  setHideTimeout: function() {
-    this.clearHideTimeout();
-    this.hideTimeout = setTimeout(() => this.hideOverlay(), 3000);
-  },
-
-  clearHideTimeout: function() {
-    if (this.hideTimeout) {
-      clearTimeout(this.hideTimeout);
-      this.hideTimeout = null;
-    }
   }
 });
 

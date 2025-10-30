@@ -8,6 +8,10 @@ body {
   -ms-user-select: none; /* IE */
 }
 
+video {
+  display: none;
+}
+
 a-scene {
   width: 100vw;
   height: 100vh;
@@ -16,17 +20,19 @@ a-scene {
 /* Video Controls Overlay */
 #video-controls-overlay {
   position: fixed;
-  top: 20px;
-  left: 20px;
-  background: rgba(0, 0, 0, 0.8);
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
   color: white;
-  padding: 20px;
+  padding: 15px;
   border-radius: 10px;
   font-family: Arial, sans-serif;
   z-index: 1000;
-  min-width: 300px;
+  width: 90%;
+  max-width: 800px;
   transition: opacity 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(10px); /* Modern browsers */
 }
 
@@ -242,8 +248,7 @@ a-scene {
 /* Mobile Styles (up to 767px) */
 @media (max-width: 767px) {
   #video-controls-overlay {
-    top: 10px;
-    left: 10px;
+    bottom: 10px;
     padding: 12px;
     min-width: 280px;
     max-width: 95vw;
