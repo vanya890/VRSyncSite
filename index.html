@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>VR 360 Video Viewer</title>
+  <title>Просмотрщик VR 360 видео</title>
   <link rel="preload" href="static/js/aframe.min.js" as="script">
   <link rel="preload" href="static/js/viewer.js" as="script">
   <!-- Override WebVR polyfill configuration - MUST be before A-Frame loads -->
@@ -30,7 +30,7 @@
     <a-videosphere radius="100"></a-videosphere>
   </a-scene>
 
-  <video id="video" src="assets/videos/sample.mp4" preload="none"></video>
+  <video id="video" src="assets/videos/sample.mp4" preload="none" playsinline webkit-playsinline muted></video>
 
   <!-- Loading Overlay -->
   <div id="loading-overlay" style="

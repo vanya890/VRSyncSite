@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Panel - VR 360 Video Manager</title>
+  <title>Админ панель - Менеджер VR 360 видео</title>
   <style>
     @font-face { font-family: 'Poppins'; font-style: normal; font-weight: 300; src: url('/static/fonts/poppins-300.woff2') format('woff2'); font-display: swap; }
     @font-face { font-family: 'Poppins'; font-style: normal; font-weight: 400; src: url('/static/fonts/poppins-400.woff2') format('woff2'); font-display: swap; }
@@ -245,32 +245,32 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>🎥 VR 360 Video Manager</h1>
-      <button class="logout-btn" onclick="logout()">Logout</button>
+      <h1>🎥 Менеджер VR 360 видео</h1>
+      <button class="logout-btn" onclick="logout()">Выход</button>
     </div>
 
     <div class="panel">
-      <h3>Upload New Video</h3>
+      <h3>Загрузить новое видео</h3>
       <form id="uploadForm" enctype="multipart/form-data" class="upload-form">
         <input type="file" id="video" name="video" accept="video/*" required>
-        <button type="submit">Upload & Generate QR</button>
+        <button type="submit">Загрузить и создать QR</button>
       </form>
       <div id="result"></div>
     </div>
 
     <div class="panel">
-      <h3>Uploaded Videos</h3>
+      <h3>Загруженные видео</h3>
       <div id="videoList" class="video-list">
-        <div class="loading">Loading videos...</div>
+        <div class="loading">Загрузка видео...</div>
       </div>
     </div>
 
     <div id="qrModal" class="modal">
       <div class="modal-content">
-        <h3>QR Code</h3>
+      <h3>QR Код</h3>
         <img id="qrImage" src="" alt="QR Code">
         <br>
-        <button class="modal-close" onclick="closeModal()">Close</button>
+        <button class="modal-close" onclick="closeModal()">Закрыть</button>
       </div>
     </div>
   </div>
@@ -288,7 +288,7 @@
       const formData = new FormData(form);
       const button = form.querySelector('button');
       const originalText = button.textContent;
-      button.textContent = 'Uploading...';
+      button.textContent = 'Загрузка...';
       button.disabled = true;
 
       try {
@@ -303,9 +303,9 @@
         }
         result.innerHTML = `
           <div class="result">
-            <p><strong>Success!</strong> Video uploaded and QR code generated.</p>
-            <p>Video URL: <a href="${data.videoUrl}" target="_blank">${data.videoUrl}</a></p>
-            <p>QR Code:</p>
+            <p><strong>Успешно!</strong> Видео загружено и QR код создан.</p>
+            <p>URL видео: <a href="${data.videoUrl}" target="_blank">${data.videoUrl}</a></p>
+            <p>QR Код:</p>
             <img src="${data.qrCode}" alt="QR Code" style="max-width: 200px; border-radius: 8px;">
             <p><a href="${data.qrCode}" download="qr-code.png" style="display: inline-block; margin-top: 10px; padding: 8px 16px; background: #4299e1; color: white; text-decoration: none; border-radius: 6px;">Download QR Code</a></p>
           </div>
@@ -339,7 +339,7 @@
 
     function renderVideoList(videos) {
       if (videos.length === 0) {
-        videoList.innerHTML = '<div class="loading">No videos uploaded yet</div>';
+        videoList.innerHTML = '<div class="loading">Пока видео не загружено</div>';
         return;
       }
 
@@ -351,10 +351,10 @@
             <div class="video-size">${formatBytes(video.size)}</div>
           </div>
           <div class="video-actions">
-            <button class="btn btn-view" onclick="viewVideo('${video.filename}')">View</button>
-            <button class="btn btn-qr-view" onclick="viewQR('${video.filename}')">View QR</button>
-            <button class="btn btn-qr-download" onclick="downloadQR('${video.filename}')">Download QR</button>
-            <button class="btn btn-delete" onclick="deleteVideo('${video.filename}')">Delete</button>
+            <button class="btn btn-view" onclick="viewVideo('${video.filename}')">Просмотр</button>
+            <button class="btn btn-qr-view" onclick="viewQR('${video.filename}')">Просмотр QR</button>
+            <button class="btn btn-qr-download" onclick="downloadQR('${video.filename}')">Скачать QR</button>
+            <button class="btn btn-delete" onclick="deleteVideo('${video.filename}')">Удалить</button>
           </div>
         </div>
       `).join('');

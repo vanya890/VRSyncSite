@@ -121,7 +121,7 @@ app.get('/admin/login', (req, res) => {
   res.send(`
     <html>
       <head>
-        <title>Admin Login</title>
+    <title>Вход в админку</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
           * { box-sizing: border-box; }
@@ -138,10 +138,10 @@ app.get('/admin/login', (req, res) => {
       </head>
       <body>
         <form method="post" action="/admin/login">
-          <h2>Admin Panel Login</h2>
-          <input type="password" name="password" placeholder="Enter password" required>
-          <button type="submit">Login</button>
-          ${req.query.error ? '<p style="color: red;">Invalid password</p>' : ''}
+          <h2>Вход в админ панель</h2>
+          <input type="password" name="password" placeholder="Введите пароль" required>
+          <button type="submit">Войти</button>
+          ${req.query.error ? '<p style="color: red;">Неверный пароль</p>' : ''}
         </form>
       </body>
     </html>
