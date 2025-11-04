@@ -9,7 +9,7 @@ const http = require('http');
 const https = require('https');
 
 const app = express();
-const port = 3001;
+const port = 3000;
 
 // Development mode для отключения кэша
 const isDevelopment = process.env.NODE_ENV !== 'production';
@@ -184,8 +184,56 @@ app.get('/admin', requireAuth, (req, res) => {
   res.sendFile(__dirname + '/admin/index.html');
 });
 
-// Базовая аналитика
-let viewCount = 0;
+// Аналитика просмотров по видео
+const ANALYTICS_FILE = './analytics.json';
+
+// Функции для работы с аналитикой
+function loadAnalytics() {
+  try {
+    if (fs.existsSync(ANALYTICS_FILE)) {
+      const data = fs.readFileSync(ANALYTICS_FILE, 'utf8');
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    console.error('Error loading analytics:', error);
+  }
+  return {};
+}
+
+function saveAnalytics(data) {
+  try {
+    fs.writeFileSync(ANALYTICS_FILE, JSON.stringify(data, null, 2));
+  } catch (error) {
+    console.error('Error saving analytics:', error);
+  }
+}
+
+function trackVideoView(videoFilename) {
+  const analytics = loadAnalytics();
+  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+
+  if (!analytics[videoFilename]) {
+    analytics[videoFilename] = {};
+  }
+
+  if (!analytics[videoFilename][today]) {
+    analytics[videoFilename][today] = 0;
+  }
+
+  analytics[videoFilename][today]++;
+  saveAnalytics(analytics);
+
+  return analytics[videoFilename][today];
+}
+
+function getVideoAnalytics(videoFilename) {
+  const analytics = loadAnalytics();
+  return analytics[videoFilename] || {};
+}
+
+function getAllAnalytics() {
+  return loadAnalytics();
+}
 
 // Страница просмотра
 app.get('/viewer.html', (req, res) => {
@@ -201,15 +249,45 @@ app.get('/viewer.html', (req, res) => {
   res.send(content);
 });
 
-// API для получения аналитики
-app.get('/analytics', requireApiAuth, (req, res) => {
-  res.json({ totalViews: viewCount });
+// API для получения общей аналитики
+app.get('/analytics', (req, res) => {
+  const analytics = getAllAnalytics();
+  const summary = {};
+
+  // Подсчитываем общее количество просмотров для каждого видео
+  for (const [video, dates] of Object.entries(analytics)) {
+    summary[video] = Object.values(dates).reduce((sum, count) => sum + count, 0);
+  }
+
+  const totalViews = Object.values(summary).reduce((sum, count) => sum + count, 0);
+
+  res.json({
+    totalViews,
+    videos: summary
+  });
 });
 
-// API для отслеживания просмотров (анонимно, без хранения данных пользователя)
-app.post('/track-view', (req, res) => {
-  viewCount++;
-  res.json({ success: true });
+// API для получения аналитики конкретного видео
+app.get('/analytics/:video', (req, res) => {
+  const videoAnalytics = getVideoAnalytics(req.params.video);
+  const totalViews = Object.values(videoAnalytics).reduce((sum, count) => sum + count, 0);
+
+  res.json({
+    video: req.params.video,
+    totalViews,
+    dailyViews: videoAnalytics
+  });
+});
+
+// API для отслеживания просмотров видео (анонимно, без хранения данных пользователя)
+app.post('/track-view/:video', (req, res) => {
+  const videoFilename = req.params.video;
+  if (!videoFilename) {
+    return res.status(400).json({ error: 'Video filename required' });
+  }
+
+  const todayViews = trackVideoView(videoFilename);
+  res.json({ success: true, todayViews });
 });
 
 // API для админ panели

@@ -12,6 +12,7 @@
   "description": "",
   "dependencies": {
     "aframe": "^1.7.1",
+    "chart.js": "^4.4.0",
     "compression": "^1.8.1",
     "express": "^5.1.0",
     "express-session": "^1.18.2",

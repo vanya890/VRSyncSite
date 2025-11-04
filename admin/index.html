@@ -11,6 +11,7 @@
     @font-face { font-family: 'Poppins'; font-style: normal; font-weight: 600; src: url('/static/fonts/poppins-600.woff2') format('woff2'); font-display: swap; }
     @font-face { font-family: 'Poppins'; font-style: normal; font-weight: 700; src: url('/static/fonts/poppins-700.woff2') format('woff2'); font-display: swap; }
   </style>
+  <link rel="stylesheet" href="/static/css/styles.css">
   <style>
     * { box-sizing: border-box; }
     body {
@@ -40,6 +41,7 @@
       margin: 0;
       background: linear-gradient(45deg, #667eea, #764ba2);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
     }
     .logout-btn {
@@ -124,6 +126,16 @@
     .video-actions {
       display: flex;
       gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn-analytics {
+      background: #38a169;
+      color: white;
+    }
+
+    .btn-analytics:hover {
+      background: #2f855a;
     }
     .btn {
       padding: 8px 16px;
@@ -265,12 +277,7 @@
       </div>
     </div>
 
-    <div class="panel">
-      <h3>Аналитика просмотров</h3>
-      <div id="analyticsData">
-        <div class="loading">Загрузка аналитики...</div>
-      </div>
-    </div>
+
 
     <div id="qrModal" class="modal">
       <div class="modal-content">
@@ -287,9 +294,8 @@
     const result = document.getElementById('result');
     const videoList = document.getElementById('videoList');
 
-    // Load videos and analytics on page load
+    // Load videos on page load
     loadVideos();
-    loadAnalytics();
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -360,6 +366,7 @@
           </div>
           <div class="video-actions">
             <button class="btn btn-view" onclick="viewVideo('${video.filename}')">Просмотр</button>
+            <button class="btn btn-analytics" onclick="viewAnalytics('${video.filename}')">Аналитика</button>
             <button class="btn btn-qr-view" onclick="viewQR('${video.filename}')">Просмотр QR</button>
             <button class="btn btn-qr-download" onclick="downloadQR('${video.filename}')">Скачать QR</button>
             <button class="btn btn-delete" onclick="deleteVideo('${video.filename}')">Удалить</button>
@@ -430,34 +437,23 @@
       }
     }
 
-    async function loadAnalytics() {
-      try {
-        const response = await fetch('/analytics', {
-          credentials: 'same-origin'
-        });
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        const data = await response.json();
-        document.getElementById('analyticsData').innerHTML = `
-          <div style="text-align: center; padding: 20px;">
-            <div style="font-size: 48px; margin-bottom: 10px;">📊</div>
-            <div style="font-size: 36px; font-weight: bold; color: #667eea;">${data.totalViews}</div>
-            <div style="font-size: 18px; color: #718096;">Всего просмотров</div>
-            <div style="font-size: 14px; color: #a0aec0; margin-top: 10px;">
-              Каждый пользователь может добавить максимум 1 просмотр в день
-            </div>
-          </div>
-        `;
-      } catch (error) {
-        console.error('Error loading analytics:', error);
-        document.getElementById('analyticsData').innerHTML = `<div class="loading" style="color: red;">Ошибка загрузки аналитики: ${error.message}</div>`;
-      }
-    }
+
 
     function closeModal() {
       document.getElementById('qrModal').style.display = 'none';
     }
+
+    function viewAnalytics(filename) {
+      if (typeof AnalyticsModal !== 'undefined') {
+        AnalyticsModal.show(filename);
+      } else {
+        alert('Analytics module not loaded');
+      }
+    }
   </script>
+
+  <!-- Analytics Scripts -->
+  <script src="/static/js/chart.min.js"></script>
+  <script src="/static/js/analytics-modal.js"></script>
 </body>
 </html>

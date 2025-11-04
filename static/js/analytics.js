@@ -1,22 +1,35 @@
-// Analytics module for tracking video views
+// Analytics module for tracking video views per video
 const Analytics = {
-  // Check if user already viewed today
-  hasViewedToday: function() {
-    const lastViewDate = localStorage.getItem('lastViewDate');
+  // Get video filename from URL parameters
+  getVideoFilename: function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('video');
+  },
+
+  // Check if user already viewed this video today
+  hasViewedVideoToday: function(videoFilename) {
+    const key = `viewed_${videoFilename}`;
+    const lastViewDate = localStorage.getItem(key);
     if (!lastViewDate) return false;
 
     const today = new Date().toDateString();
     return lastViewDate === today;
   },
 
-  // Track a view
+  // Track a view for specific video
   trackView: function() {
-    if (this.hasViewedToday()) {
-      console.log('View already tracked today');
+    const videoFilename = this.getVideoFilename();
+    if (!videoFilename) {
+      console.warn('No video filename found in URL');
       return;
     }
 
-    fetch('/track-view', {
+    if (this.hasViewedVideoToday(videoFilename)) {
+      console.log(`View already tracked today for video: ${videoFilename}`);
+      return;
+    }
+
+    fetch(`/track-view/${encodeURIComponent(videoFilename)}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -24,10 +37,11 @@ const Analytics = {
     })
     .then(response => {
       if (response.ok) {
-        // Mark as viewed today
+        // Mark as viewed today for this video
         const today = new Date().toDateString();
-        localStorage.setItem('lastViewDate', today);
-        console.log('View tracked successfully');
+        const key = `viewed_${videoFilename}`;
+        localStorage.setItem(key, today);
+        console.log(`View tracked successfully for video: ${videoFilename}`);
       } else {
         console.error('Failed to track view');
       }

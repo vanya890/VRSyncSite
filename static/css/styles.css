@@ -334,3 +334,185 @@ a-scene {
   padding: 10px;
   font-size: 1.5em;
 }
+
+/* Analytics Modal Styles */
+.analytics-modal {
+  display: none;
+  position: fixed;
+  z-index: 10000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(5px);
+  justify-content: center;
+  align-items: center;
+}
+
+.analytics-modal-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  max-width: 800px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: hidden;
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.analytics-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.analytics-modal-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.analytics-modal-close {
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  line-height: 1;
+}
+
+.analytics-modal-close:hover {
+  transform: scale(1.1);
+}
+
+.analytics-modal-body {
+  padding: 24px;
+  max-height: calc(80vh - 80px);
+  overflow-y: auto;
+}
+
+.analytics-info {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.analytics-video-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 8px;
+}
+
+.analytics-total-views {
+  font-size: 1rem;
+  color: #718096;
+  font-weight: 500;
+}
+
+.analytics-chart-container {
+  position: relative;
+  height: 300px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.analytics-error {
+  text-align: center;
+  padding: 40px;
+  color: #e53e3e;
+}
+
+.analytics-error p {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.analytics-loading {
+  text-align: center;
+  padding: 40px;
+  color: #718096;
+}
+
+.analytics-loading p {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+/* Responsive Design for Analytics Modal */
+@media (max-width: 768px) {
+  .analytics-modal-content {
+    width: 95%;
+    max-height: 85vh;
+  }
+
+  .analytics-modal-header {
+    padding: 16px 20px;
+  }
+
+  .analytics-modal-header h3 {
+    font-size: 1.3rem;
+  }
+
+  .analytics-modal-body {
+    padding: 20px;
+    max-height: calc(85vh - 70px);
+  }
+
+  .analytics-chart-container {
+    height: 250px;
+  }
+
+  .analytics-video-title {
+    font-size: 1.1rem;
+  }
+
+  .analytics-total-views {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .analytics-modal-content {
+    width: 98%;
+    margin: 10px;
+  }
+
+  .analytics-modal-header {
+    padding: 12px 16px;
+  }
+
+  .analytics-modal-header h3 {
+    font-size: 1.2rem;
+  }
+
+  .analytics-modal-close {
+    font-size: 24px;
+  }
+
+  .analytics-modal-body {
+    padding: 16px;
+  }
+
+  .analytics-chart-container {
+    height: 200px;
+  }
+
+  .analytics-info {
+    margin-bottom: 16px;
+  }
+}
