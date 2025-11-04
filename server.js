@@ -192,10 +192,26 @@ function loadAnalytics() {
   try {
     if (fs.existsSync(ANALYTICS_FILE)) {
       const data = fs.readFileSync(ANALYTICS_FILE, 'utf8');
-      return JSON.parse(data);
+      const parsed = JSON.parse(data);
+      console.log('[ANALYTICS] Loaded analytics data:', parsed);
+      return parsed;
+    } else {
+      console.log('[ANALYTICS] Analytics file does not exist, creating empty analytics');
+      // Create empty analytics file
+      const emptyAnalytics = {};
+      fs.writeFileSync(ANALYTICS_FILE, JSON.stringify(emptyAnalytics, null, 2));
+      return emptyAnalytics;
     }
   } catch (error) {
-    console.error('Error loading analytics:', error);
+    console.error('[ANALYTICS] Error loading analytics:', error);
+    // Return empty object and try to create file
+    try {
+      const emptyAnalytics = {};
+      fs.writeFileSync(ANALYTICS_FILE, JSON.stringify(emptyAnalytics, null, 2));
+      return emptyAnalytics;
+    } catch (writeError) {
+      console.error('[ANALYTICS] Error creating analytics file:', writeError);
+    }
   }
   return {};
 }
@@ -243,6 +259,15 @@ app.get('/viewer.html', (req, res) => {
     return res.status(400).send('Video parameter is required');
   }
 
+  // Отслеживаем просмотр при каждом запросе страницы
+  try {
+    const todayViews = trackVideoView(videoParam);
+    console.log('[VIEWER] Tracked view for video:', videoParam, '- today views:', todayViews);
+  } catch (error) {
+    console.error('[VIEWER] Error tracking view for', videoParam, ':', error);
+    // Продолжаем работу даже если отслеживание не удалось
+  }
+
   // Прочитать index.html и заменить src видео
   let content = fs.readFileSync(__dirname + '/index.html', 'utf8');
   content = content.replace('src="assets/videos/sample.mp4"', `src="assets/videos/${videoParam}"`);
@@ -282,12 +307,21 @@ app.get('/analytics/:video', (req, res) => {
 // API для отслеживания просмотров видео (анонимно, без хранения данных пользователя)
 app.post('/track-view/:video', (req, res) => {
   const videoFilename = req.params.video;
+  console.log('[ANALYTICS] Track view request for video:', videoFilename);
+
   if (!videoFilename) {
+    console.error('[ANALYTICS] No video filename provided in track-view request');
     return res.status(400).json({ error: 'Video filename required' });
   }
 
-  const todayViews = trackVideoView(videoFilename);
-  res.json({ success: true, todayViews });
+  try {
+    const todayViews = trackVideoView(videoFilename);
+    console.log('[ANALYTICS] Successfully tracked view for', videoFilename, '- today views:', todayViews);
+    res.json({ success: true, todayViews });
+  } catch (error) {
+    console.error('[ANALYTICS] Error tracking view for', videoFilename, ':', error);
+    res.status(500).json({ error: 'Failed to track view' });
+  }
 });
 
 // API для админ panели
