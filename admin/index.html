@@ -265,6 +265,13 @@
       </div>
     </div>
 
+    <div class="panel">
+      <h3>Аналитика просмотров</h3>
+      <div id="analyticsData">
+        <div class="loading">Загрузка аналитики...</div>
+      </div>
+    </div>
+
     <div id="qrModal" class="modal">
       <div class="modal-content">
       <h3>QR Код</h3>
@@ -280,8 +287,9 @@
     const result = document.getElementById('result');
     const videoList = document.getElementById('videoList');
 
-    // Load videos on page load
+    // Load videos and analytics on page load
     loadVideos();
+    loadAnalytics();
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -419,6 +427,31 @@
         link.click();
       } catch (error) {
         alert('Error downloading QR code: ' + error.message);
+      }
+    }
+
+    async function loadAnalytics() {
+      try {
+        const response = await fetch('/analytics', {
+          credentials: 'same-origin'
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        const data = await response.json();
+        document.getElementById('analyticsData').innerHTML = `
+          <div style="text-align: center; padding: 20px;">
+            <div style="font-size: 48px; margin-bottom: 10px;">📊</div>
+            <div style="font-size: 36px; font-weight: bold; color: #667eea;">${data.totalViews}</div>
+            <div style="font-size: 18px; color: #718096;">Всего просмотров</div>
+            <div style="font-size: 14px; color: #a0aec0; margin-top: 10px;">
+              Каждый пользователь может добавить максимум 1 просмотр в день
+            </div>
+          </div>
+        `;
+      } catch (error) {
+        console.error('Error loading analytics:', error);
+        document.getElementById('analyticsData').innerHTML = `<div class="loading" style="color: red;">Ошибка загрузки аналитики: ${error.message}</div>`;
       }
     }
 

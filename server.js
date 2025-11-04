@@ -195,8 +195,6 @@ app.get('/viewer.html', (req, res) => {
     return res.status(400).send('Video parameter is required');
   }
 
-  viewCount++;
-
   // Прочитать index.html и заменить src видео
   let content = fs.readFileSync(__dirname + '/index.html', 'utf8');
   content = content.replace('src="assets/videos/sample.mp4"', `src="assets/videos/${videoParam}"`);
@@ -206,6 +204,12 @@ app.get('/viewer.html', (req, res) => {
 // API для получения аналитики
 app.get('/analytics', requireApiAuth, (req, res) => {
   res.json({ totalViews: viewCount });
+});
+
+// API для отслеживания просмотров (анонимно, без хранения данных пользователя)
+app.post('/track-view', (req, res) => {
+  viewCount++;
+  res.json({ success: true });
 });
 
 // API для админ panели
