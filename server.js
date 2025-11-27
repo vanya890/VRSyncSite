@@ -41,7 +41,7 @@ if (!isDevelopment) {
 
 
 // Простая аутентификация
-const ADMIN_PASSWORD = 'admin123'; // В продакшне использовать более безопасный метод
+const ADMIN_PASSWORD = 'KwSkaDD9'; // В продакшне использовать более безопасный метод
 
 // Middleware для проверки аутентификации (для страниц)
 function requireAuth(req, res, next) {
