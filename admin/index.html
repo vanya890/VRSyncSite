@@ -376,7 +376,7 @@
     }
 
     function viewVideo(filename) {
-      window.open(`/viewer.html?video=${filename}`, '_blank');
+      window.location.href = `/redirect.html?video=${filename}`;
     }
 
     async function deleteVideo(filename) {

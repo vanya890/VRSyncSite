@@ -7,9 +7,13 @@ const session = require('express-session');
 const compression = require('compression');
 const http = require('http');
 const https = require('https');
+const crypto = require('crypto');
+const forge = require('node-forge');
+const ip = require('ip');
+const { constants } = require('crypto');
 
 const app = express();
-const port = 3000;
+const port = 80;
 
 // Development mode для отключения кэша
 const isDevelopment = process.env.NODE_ENV !== 'production';
@@ -78,6 +82,9 @@ app.use('/static', express.static('static', {
 app.use('/assets', express.static('assets', {
   maxAge: '1h'  // Видео могут обновляться чаще
 }));
+app.use('/alva', express.static('Alva/public', {
+  maxAge: '1d'
+}));
 
 // Дополнительная поддержка Range Requests для видео
 app.get('/assets/videos/:filename', (req, res) => {
@@ -112,6 +119,7 @@ app.get('/assets/videos/:filename', (req, res) => {
   }
 });
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/redirect.html', (req, res) => res.sendFile(path.join(__dirname, 'redirect.html')));
 
 // Логин
 app.get('/admin/login', (req, res) => {
@@ -168,7 +176,7 @@ app.post('/upload', requireApiAuth, upload.single('video'), (req, res) => {
     return res.status(400).json({ error: 'No file uploaded.' });
   }
 
-  const videoUrl = `${req.protocol}://${req.get('host')}/viewer.html?video=${req.file.filename}`;
+  const videoUrl = `${req.protocol}://${req.get('host')}/redirect.html?video=${req.file.filename}`;
 
   qr.toBuffer(videoUrl, { type: 'png' }, (err, buffer) => {
     if (err) return res.status(500).json({ error: 'Error generating QR code' });
@@ -349,7 +357,7 @@ app.delete('/admin/api/videos/:filename', requireApiAuth, (req, res) => {
 // API для генерации QR кодов для видео
 app.get('/admin/api/qr/:filename', requireApiAuth, (req, res) => {
   const filename = req.params.filename;
-  const videoUrl = `${req.protocol}://${req.get('host')}/viewer.html?video=${filename}`;
+  const videoUrl = `${req.protocol}://${req.get('host')}/redirect.html?video=${filename}`;
 
   qr.toBuffer(videoUrl, { type: 'png' }, (err, buffer) => {
     if (err) return res.status(500).json({ error: 'Error generating QR code' });
@@ -384,7 +392,132 @@ app.get('/blocked-dpdb-request', (req, res) => {
   });
 });
 
+// Функция для генерации самоподписанного сертификата
+function generateSelfSignedCert() {
+    const sslDir = './ssl';
+    const keyPath = `${sslDir}/key.pem`;
+    const certPath = `${sslDir}/cert.pem`;
+
+    // Проверяем, существуют ли файлы
+    if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
+        return {
+            key: fs.readFileSync(keyPath),
+            cert: fs.readFileSync(certPath)
+        };
+    }
+
+    // Создаем директорию, если не существует
+    if (!fs.existsSync(sslDir)) {
+        fs.mkdirSync(sslDir);
+    }
+
+    // Генерируем ключи с помощью node-forge
+    const keys = forge.pki.rsa.generateKeyPair(2048);
+    const cert = forge.pki.createCertificate();
+
+    cert.publicKey = keys.publicKey;
+    cert.serialNumber = '01';
+    cert.validity.notBefore = new Date();
+    cert.validity.notAfter = new Date();
+    cert.validity.notAfter.setFullYear(cert.validity.notBefore.getFullYear() + 1);
+
+    const attrs = [
+        { name: 'countryName', value: 'RU' },
+        { shortName: 'ST', value: 'State' },
+        { name: 'localityName', value: 'City' },
+        { name: 'organizationName', value: 'AlvaAR' },
+        { shortName: 'OU', value: 'OrgUnit' },
+        { name: 'commonName', value: 'localhost' }
+    ];
+
+    cert.setSubject(attrs);
+    cert.setIssuer(attrs);
+    cert.setExtensions([
+        {
+            name: 'basicConstraints',
+            cA: true
+        },
+        {
+            name: 'keyUsage',
+            keyCertSign: true,
+            digitalSignature: true,
+            nonRepudiation: true,
+            keyEncipherment: true,
+            dataEncipherment: true
+        },
+        {
+            name: 'extKeyUsage',
+            serverAuth: true,
+            clientAuth: true,
+            codeSigning: true,
+            emailProtection: true,
+            timeStamping: true
+        },
+        {
+            name: 'nsCertType',
+            client: true,
+            server: true,
+            email: true,
+            objsign: true,
+            sslCA: true,
+            emailCA: true,
+            objCA: true
+        },
+        {
+            name: 'subjectAltName',
+            altNames: [
+                {
+                    type: 2, // DNS
+                    value: 'localhost'
+                },
+                {
+                    type: 7, // IP
+                    ip: ip.address()
+                },
+                {
+                    type: 7, // IP
+                    ip: '127.0.0.1'
+                }
+            ]
+        },
+        {
+            name: 'subjectKeyIdentifier'
+        }
+    ]);
+
+    // Самоподписываем
+    cert.sign(keys.privateKey);
+
+    // Конвертируем в PEM
+    const pemPrivate = forge.pki.privateKeyToPem(keys.privateKey);
+    const pemCert = forge.pki.certificateToPem(cert);
+
+    // Сохраняем файлы
+    fs.writeFileSync(keyPath, pemPrivate);
+    fs.writeFileSync(certPath, pemCert);
+
+    console.log('SSL certificates generated and saved to ./ssl/');
+
+    return {
+        key: pemPrivate,
+        cert: pemCert
+    };
+}
+
+const httpsPort = 443;
 
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+  console.log(`HTTP Server running at http://localhost:${port}`);
+
+  // Запуск HTTPS сервера
+  const sslOptions = {
+      ...generateSelfSignedCert(),
+      secureOptions: constants.SSL_OP_NO_TLSv1 | constants.SSL_OP_NO_TLSv1_1,
+      ciphers: 'ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA384:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!SRP:!CAMELLIA'
+  };
+  const httpsServer = https.createServer(sslOptions, app);
+
+  httpsServer.listen(httpsPort, () => {
+      console.log(`HTTPS Server running at https://localhost:${httpsPort}`);
+  });
 });
