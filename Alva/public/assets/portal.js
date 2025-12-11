@@ -218,6 +218,8 @@ class PortalApp {
             side: THREE.BackSide
         });
         this.sphere360 = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        // Поворот сферы на 90 градусов (можно менять это значение в радианах)
+        this.sphere360.rotation.y = Math.PI / 2;
         this.scene.add(this.sphere360);
     }
 
@@ -261,6 +263,10 @@ class PortalApp {
         texture.minFilter = THREE.LinearFilter;
         texture.magFilter = THREE.LinearFilter;
         texture.mapping = THREE.EquirectangularReflectionMapping;
+
+        // Переворот текстуры по горизонтали для правильного чтения текста в AR
+        texture.repeat.x = -1;
+        texture.offset.x = 1;
 
         this.videoTexture = texture;
 
@@ -413,6 +419,8 @@ class PortalApp {
             side: THREE.BackSide
         });
         this.sphere360 = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        // Поворот сферы на 90 градусов (можно менять это значение в радианах)
+        this.sphere360.rotation.y = Math.PI / 2;
         // Размещаем напротив камеры на расстоянии 20
         const direction = new THREE.Vector3();
         this.camera.getWorldDirection(direction);
