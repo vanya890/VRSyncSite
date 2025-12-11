@@ -21,6 +21,12 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
 app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Обслуживание favicon.ico
+app.get('/favicon.ico', (req, res) => {
+  res.sendFile(path.join(__dirname, 'favicon.ico'));
+});
+
 app.use(session({
   secret: 'vr-video-secret',
   resave: false,
