@@ -1,3 +1,5 @@
-assets/
 node_modules/
 Doc/
+assets/videos/
+ssl/
+Alva/public/assets/vr-video-sample.mp4
