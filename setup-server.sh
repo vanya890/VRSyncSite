@@ -13,13 +13,17 @@ apt-get install -y nodejs
 echo "Установка Git..."
 apt install -y git
 
-# Удаление старой папки и клонирование репозитория
-echo "Удаление старой папки проекта..."
-rm -rf /root/VRSyncSite
-
-echo "Клонирование репозитория..."
-git clone https://github.com/vanya890/VRSyncSite.git
-cd VRSyncSite
+# Клонирование или обновление репозитория с полной заменой
+if [ -d "/root/VRSyncSite" ]; then
+    echo "Папка проекта существует, выполняем полную замену..."
+    cd /root/VRSyncSite
+    git fetch origin
+    git reset --hard origin/main
+else
+    echo "Клонирование репозитория..."
+    git clone https://github.com/vanya890/VRSyncSite.git
+    cd VRSyncSite
+fi
 
 # Создание скрипта обновления
 echo "Создание скрипта обновления..."
