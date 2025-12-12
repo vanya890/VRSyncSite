@@ -3,6 +3,27 @@ let videoControlsComponent = null;
 let userClickedStart = false;
 let canPlayThroughHappened = false;
 
+// Get video parameter from URL
+const urlParams = new URLSearchParams(window.location.search);
+const videoParam = urlParams.get('video');
+
+// Function to restore video position from localStorage
+const restoreVideoPosition = (video) => {
+  if (videoParam) {
+    const positionKey = 'videoPosition_' + videoParam;
+    const savedPosition = localStorage.getItem(positionKey);
+    if (savedPosition) {
+      const position = parseFloat(savedPosition);
+      if (!isNaN(position) && position > 0) {
+        video.currentTime = position;
+        console.log('Restored video position:', position);
+        // Clear the saved position after restoring
+        localStorage.removeItem(positionKey);
+      }
+    }
+  }
+};
+
 // Add component to scene automatically
 document.addEventListener('DOMContentLoaded', function() {
   const scene = document.querySelector('a-scene');
@@ -182,6 +203,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (videosphere && !videosphere.hasAttribute('src')) {
           videosphere.setAttribute('src', '#video');
         }
+
+        // Restore video position from localStorage
+        restoreVideoPosition(video);
 
         if (userClickedStart) {
           video.play().catch(() => {});

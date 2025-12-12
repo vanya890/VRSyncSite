@@ -95,7 +95,7 @@ class PortalApp {
                 aspectRatio: 16 / 9,
                 width: { ideal: 1280 }
             },
-            audio: false
+            audio: true
         };
 
         try {
@@ -229,7 +229,7 @@ class PortalApp {
         video.src = this.videoParam ? `/assets/videos/${this.videoParam}` : './assets/vr-video-sample.mp4';
         video.crossOrigin = 'anonymous';
         video.loop = true;
-        video.muted = true;
+        video.muted = false;
         video.playsInline = true;
         video.webkitPlaysInline = true;
         video.preload = 'auto'; // Предварительная загрузка
@@ -399,6 +399,12 @@ class PortalApp {
             if (tapTimeout) clearTimeout(tapTimeout);
             tapTimeout = setTimeout(() => {
                 if (this.portalPlaced && this.videoStarted) {
+                    // Сохраняем текущую позицию видео перед переходом
+                    if (this.video && this.videoParam) {
+                        const positionKey = 'videoPosition_' + this.videoParam;
+                        localStorage.setItem(positionKey, this.video.currentTime.toString());
+                    }
+
                     // Второй тап - перенаправляем на стандартный просмотрщик
                     const viewerUrl = this.videoParam ? `/viewer.html?video=${encodeURIComponent(this.videoParam)}` : '/viewer.html';
                     window.location.href = viewerUrl;
