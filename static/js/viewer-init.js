@@ -123,43 +123,41 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     };
 
-    // Start overlay click handler - begin loading
+    // Start overlay click handler - begin loading and start video immediately
     const startHandler = async () => {
       if (!hasStartedLoading) {
         startOverlay.style.display = 'none';
         startOverlay.hasBeenShown = true;
         hasStartedLoading = true;
 
-        // Show loading overlay immediately
-        loadingOverlay.style.display = 'flex';
-        loadingProgress.textContent = 'Подготовка...';
+        // Show minimal loading indicator
+        if (loadingOverlay) {
+          loadingOverlay.style.display = 'flex';
+          loadingProgress.textContent = 'Запуск...';
+        }
 
         try {
           // Load video with mobile-friendly approach
           await loadVideoMobile();
 
-          // Show loading progress and start buffering
-          loadingProgress.textContent = '0%';
+          // Immediately try to start video playback
+          const videosphere = document.querySelector('a-videosphere');
+          if (videosphere) {
+            videosphere.setAttribute('src', '#video');
+          }
 
-          // Adaptive timeout based on connection speed
-          loadingTimeout = setTimeout(() => {
-            if (!canPlayThroughHappened) {
-              loadingProgress.textContent = 'Оптимизация загрузки...';
-              // Allow to proceed with partial buffer on mobile
-              const videosphere = document.querySelector('a-videosphere');
-              if (videosphere) {
-                videosphere.setAttribute('src', '#video');
-                video.play().then(() => {
-                  // Hide overlay when video starts playing despite timeout
-                  loadingOverlay.style.display = 'none';
-                }).catch(() => {});
-              }
-            }
-          }, criticalLoadTimeout);
+          // Start video immediately after user interaction
+          video.play().then(() => {
+            if (loadingOverlay) loadingOverlay.style.display = 'none';
+            console.log('Video started immediately');
+          }).catch((error) => {
+            console.log('Video play failed, waiting for canplaythrough:', error);
+            // Fallback: wait for canplaythrough if immediate play fails
+          });
 
         } catch (error) {
           console.error('Video loading error:', error);
-          loadingProgress.textContent = 'Ошибка загрузки';
+          if (loadingProgress) loadingProgress.textContent = 'Ошибка загрузки';
         }
       }
     };

@@ -108,6 +108,8 @@ class PortalApp {
 
     async initARScene(media) {
         const $video = media.el;
+        // Отключаем звук с камеры, чтобы избежать обратной связи
+        $video.muted = true;
         const size = resize2cover($video.videoWidth, $video.videoHeight, this.container.clientWidth, this.container.clientHeight);
 
         const $canvas = document.createElement('canvas');
