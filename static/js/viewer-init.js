@@ -146,6 +146,9 @@ document.addEventListener('DOMContentLoaded', function() {
             videosphere.setAttribute('src', '#video');
           }
 
+          // Restore video position from localStorage before playing
+          restoreVideoPosition(video);
+
           // Start video immediately after user interaction
           video.play().then(() => {
             if (loadingOverlay) loadingOverlay.style.display = 'none';
@@ -201,9 +204,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (videosphere && !videosphere.hasAttribute('src')) {
           videosphere.setAttribute('src', '#video');
         }
-
-        // Restore video position from localStorage
-        restoreVideoPosition(video);
 
         if (userClickedStart) {
           video.play().catch(() => {});
